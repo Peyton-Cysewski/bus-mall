@@ -2,13 +2,14 @@
 
 var allImages = [];
 var attempts = 25;
+var timesClicked = 0;
 
 function Image(name, path) {
   this.name = name;
   this.path = path;
   this.timesShown = 0;
   this.timesClicked = 0;
-  this.percentClicked = this.timesClicked / this.timesShown
+  this.percentClicked = (this.timesClicked)/ (this.timesShown) * 100;
   allImages.push(this);
 }
 
@@ -65,16 +66,35 @@ function renderImages() {
   image3.name = newImage3.name;
   newImage3.timesShown++;
 }
-
-function handleClick(e) {
+function displayResults() {
+  var list = document.getElementById('resultsList');
   for (var i = 0; i < allImages.length; i++) {
-    if (e.target.name === allImages[i].name) {
-      allImages[i].timesClicked++;
-      console.log(allImages[i].timesClicked);
-    }
+    var listItem = document.createElement('li');
+    listItem.textContent = 'The ' + allImages[i].name + ' image was clicked ' + allImages[i].timesClicked + ' times and was shown ' + allImages[i].timesShown + ' times to get a click rate of ' + allImages[i].percentClicked + ' percent.'
+    list.appendChild(listItem)
   }
 }
+
+function handleClick(e) {
+  // console.log(timesClicked);
+  if (timesClicked < attempts) {
+    for (var i = 0; i < allImages.length; i++) {
+      if (e.target.name === allImages[i].name) {
+        allImages[i].timesClicked++;
+        // console.log(allImages[i].timesClicked);
+      }
+    }
+    renderImages();
+  }
+  timesClicked++;
+  if (timesClicked === attempts) {
+    displayResults();
+  }
+}
+
 
 image1.addEventListener('click', handleClick);
 image2.addEventListener('click', handleClick);
 image3.addEventListener('click', handleClick);
+
+renderImages();
