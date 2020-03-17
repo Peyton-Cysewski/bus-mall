@@ -87,7 +87,7 @@ canvas {
 /* Footer */
 
 #footer {
-  margin-top: 25px;
+  padding-top: 25px;
   background-color: rgba(225, 0, 255, 1);
 }
  test {

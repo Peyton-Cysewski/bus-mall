@@ -83,12 +83,12 @@ function displayResults() {
   var list = document.getElementById('resultsList');
   for (var i = 0; i < allImages.length; i++) {
     var listItem = document.createElement('li');
-    listItem.textContent = 'The ' + allImages[i].name + ' image was clicked ' + allImages[i].timesClicked + ' times and was shown ' + allImages[i].timesShown + ' times for a click rate of ' + Math.floor(allImages[i].timesClicked * 100 / allImages[i].timesShown) + '%.'
+    listItem.textContent = allImages[i].name + ' was clicked ' + allImages[i].timesClicked + ' times and was shown ' + allImages[i].timesShown + ' times for a click rate of ' + Math.floor(allImages[i].timesClicked * 100 / allImages[i].timesShown) + '%.'
     list.appendChild(listItem)
   }
 }
 
-// Funtions for Clicking the Images
+// Functions for Clicking the Images
 function handleClick(e) {
   // console.log(timesClicked);
   if (timesClicked < attempts) {
@@ -103,9 +103,16 @@ function handleClick(e) {
   timesClicked++;
   if (timesClicked === attempts) {
     displayResults();
+    renderChart();
+    image1.removeEventListener('click', handleClick);
+    image2.removeEventListener('click', handleClick);
+    image3.removeEventListener('click', handleClick);
+    var chartDiv = document.getElementById('chartContainer');
+    chartDiv.style.display = 'block';
+    var resultsDiv = document.getElementById('temp');
+    resultsDiv.style.display = 'none'
   }
 }
-
 
 image1.addEventListener('click', handleClick);
 image2.addEventListener('click', handleClick);
@@ -122,7 +129,6 @@ function fillChartArrays () {
     dataBorderColors.push(borderColors[i % (borderColors.length - 0)]);
   }
 }
-
 
 function renderChart() {
   fillChartArrays();
@@ -153,7 +159,17 @@ function renderChart() {
   });
 }
 
+//Handling the Page Display
+function controlPage() {
+  var chartDiv = document.getElementById('chartContainer')
+  chartDiv.style.display = 'none';
+  renderImages();
+}
 
-//Calling the Functions
-renderImages();
-// renderChart();
+
+
+
+
+
+//Calling the main Function
+controlPage();
