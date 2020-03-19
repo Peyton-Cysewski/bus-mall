@@ -1,16 +1,27 @@
 'use strict';
 
-// Global Variables
+// *** Global Variables *** //
+
+// Image Objects Array
 var allImages = [];
 
+// Image Objects.name Array
 var imageNames = [];
+
+// Individual Result Arrays
+var timesShown = [];
+var timesClicked = [];
 var clickPercentages = [];
+
+// Survey Counters
+var attempts = 25;
+var votes = 0;
+
+// Chart Color Schemes
+var colors = ['rgba(251, 255, 0, 0.2)','rgba(255, 60, 0, 0.2)','rgba(21, 255, 0, 0.2)','rgba(0, 38, 255, 0.2)','rgba(225, 0, 255, 0.2)'];
+var borderColors = ['rgba(251, 255, 0, 1)','rgba(255, 60, 0, 1)','rgba(21, 255, 0, 1)','rgba(0, 38, 255, 1)','rgba(225, 0, 255, 1)'];
 var dataColors = [];
 var dataBorderColors = [];
-
-
-var attempts = 25;
-var timesClicked = 0;
 
 // Constructor Function for the Image Objects
 function Image(name, path) {
@@ -43,36 +54,64 @@ new Image('usb','img/usb.gif')
 new Image('water-can','img/water-can.jpg')
 new Image('wine-glass','img/wine-glass.jpg')
 
+// Finding DOM Elements
+var chartContainer = document.getElementById('chartContainer');
+var hiddenTempDiv = document.getElementById('temp');
 
-//Identifying and Rendering Image Functions
+// Identifying DOM Image Locations
 var image1 = document.getElementById('image1')
 var image2 = document.getElementById('image2')
 var image3 = document.getElementById('image3')
 
-function chooseImage() {
+// Placeholder Images
+var oldImage1 = image1;
+var oldImage2 = image2;
+var oldImage3 = image3;
+
+// *** Global Functions *** //
+
+// Toggles Displays between Block and None
+function toggleDisplay(target) {
+  console.log(target.style.display);
+  
+  if (target.style.display === 'none') {
+    target.style.display = 'block';
+  } else {
+    target.style.display === 'none';
+  }
+}
+
+// Safely Chooses 3 Brand New Images 
+function chooseNewImage() {
   var i = Math.floor(Math.random() * allImages.length)
   while (
     allImages[i].name === image1.name ||
     allImages[i].name === image2.name ||
-    allImages[i].name === image3.name
+    allImages[i].name === image3.name ||
+    allImages[i].name === oldImage1.name ||
+    allImages[i].name === oldImage2.name ||
+    allImages[i].name === oldImage3.name
+    // Checking against an OldImage3 would be redundant
   ) {
     i = Math.floor(Math.random() * allImages.length)
   }
   return allImages[i];
 }
 
+// Puts Images onto the Page
 function renderImages() {
-  var newImage1 = chooseImage();
+
+  var newImage1 = chooseNewImage();
   image1.src = newImage1.path;
   image1.name = newImage1.name;
   newImage1.timesShown++;
 
-  var newImage2 = chooseImage();
+  var newImage2 = chooseNewImage();
   image2.src = newImage2.path;
   image2.name = newImage2.name;
   newImage2.timesShown++;
 
-  var newImage3 = chooseImage();
+  var newImage3 = chooseNewImage();
   image3.src = newImage3.path;
   image3.name = newImage3.name;
   newImage3.timesShown++;
@@ -90,48 +129,43 @@ function displayResults() {
 
 // Functions for Clicking the Images
 function handleClick(e) {
-  // console.log(timesClicked);
-  if (timesClicked < attempts) {
+  if (votes < attempts) {
     for (var i = 0; i < allImages.length; i++) {
       if (e.target.name === allImages[i].name) {
         allImages[i].timesClicked++;
-        // console.log(allImages[i].timesClicked);
       }
     }
     renderImages();
   }
-  timesClicked++;
-  if (timesClicked === attempts) {
+  votes++;
+  if (votes === attempts) {
     displayResults();
-    renderChart();
+    toggleDisplay(hiddenTempDiv);
+    toggleDisplay(chartContainer);
+    renderChart(clickPercentages);
     image1.removeEventListener('click', handleClick);
     image2.removeEventListener('click', handleClick);
     image3.removeEventListener('click', handleClick);
-    var chartDiv = document.getElementById('chartContainer');
-    chartDiv.style.display = 'block';
-    var resultsDiv = document.getElementById('temp');
-    resultsDiv.style.display = 'none'
   }
 }
 
+// Event Listeners
 image1.addEventListener('click', handleClick);
 image2.addEventListener('click', handleClick);
 image3.addEventListener('click', handleClick);
 
 // Functions for Creating the Chart
-function fillChartArrays () {
-  var colors = ['rgba(251, 255, 0, 0.2)','rgba(255, 60, 0, 0.2)','rgba(21, 255, 0, 0.2)','rgba(0, 38, 255, 0.2)','rgba(225, 0, 255, 0.2)'];
-  var borderColors = ['rgba(251, 255, 0, 1)','rgba(255, 60, 0, 1)','rgba(21, 255, 0, 1)','rgba(0, 38, 255, 1)','rgba(225, 0, 255, 1)'];
-  for (var i = 0; i < allImages.length; i++) {
+function fillChartPrereqArrays () {
+    for (var i = 0; i < allImages.length; i++) {
     imageNames.push(allImages[i].name);
     clickPercentages.push(Math.floor(allImages[i].timesClicked * 100 / allImages[i].timesShown));
     dataColors.push(colors[i % (colors.length - 0)]);
     dataBorderColors.push(borderColors[i % (borderColors.length - 0)]);
   }
 }
-
-function renderChart() {
-  fillChartArrays();
+// Draws a New Chart
+function renderChart(dataArray) {
+  fillChartPrereqArrays();
   var canvas = document.getElementById('chart');
   canvas.innerHTML = 'null';
   var ctx = canvas.getContext('2d');
@@ -142,7 +176,7 @@ function renderChart() {
       labels: imageNames,
       datasets: [{
         label: 'Percentage of Votes per Times Shown',
-        data: clickPercentages,
+        data: dataArray,
         backgroundColor: dataColors,
         borderColor: dataBorderColors,
         borderWidth: 1
@@ -162,8 +196,6 @@ function renderChart() {
 
 //Handling the Page Display
 function controlPage() {
-  var chartDiv = document.getElementById('chartContainer')
-  chartDiv.style.display = 'none';
   renderImages();
 }
 
