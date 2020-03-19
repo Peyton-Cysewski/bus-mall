@@ -44,6 +44,25 @@ body {
   background-color: rgba(255, 60, 0, 1);
 }
 
+#chartOptions {
+  background-color: lightgray;
+  display: flex;
+  margin: 0 20px 20px 20px;
+}
+
+#chartOptions div {
+  width: 25%;
+  height: 75px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 75px;
+}
+
+#chartOptions div:hover {
+  color: white;
+  background-color: black;
+}
+
 #imgBar {
   display: flex;
 }

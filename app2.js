@@ -14,7 +14,7 @@ var timesClickedData = [];
 var clickPercentagesData = [];
 
 // Unique Survey Results Array
-var surveyData = [timesShownData,timesClickedData,clickPercentagesData];
+var surveyData = [timesShownData,timesClickedData];
 
 // JSON Data
 var localInfo = [];
@@ -63,13 +63,22 @@ new Image('wine-glass','img/wine-glass.jpg')
 // Finding and setting specific DOM Elements
 var chartContainer = document.getElementById('chartContainer');
 var hiddenTempDiv = document.getElementById('temp');
+var chartOptions = document.getElementById('chartOptions')
+
 chartContainer.style.display = 'none';
 hiddenTempDiv.style.display = 'block';
+chartOptions.style.display = 'none';
 
-// Identifying DOM Image Locations
-var image1 = document.getElementById('image1')
-var image2 = document.getElementById('image2')
-var image3 = document.getElementById('image3')
+
+// Identifying Clickable DOM Locations
+var image1 = document.getElementById('image1');
+var image2 = document.getElementById('image2');
+var image3 = document.getElementById('image3');
+
+var option1 = document.getElementById('currentChart');
+var option2 = document.getElementById('aggregateChart');
+var option3 = document.getElementById('newSurvey');
+var option3 = document.getElementById('clearData');
 
 // Placeholder Images
 var oldImage1 = image1;
@@ -77,6 +86,10 @@ var oldImage2 = image2;
 var oldImage3 = image3;
 
 // *** Global Functions *** //
+
+function calcPercent(nominator, denominator) {
+  return Math.floor((nominator * 100) / denominator);
+}
 
 // Toggles CSS Display Styles between Block and None
 function toggleDisplay(targetElement) {
@@ -124,35 +137,13 @@ function renderImages() {
 }
 
 //Displaying the Text Results
-function displayResults() {
+function displayResults(clickData, shownData) {
   var list = document.getElementById('resultsList');
+  ValidityState.innerHTML = null;
   for (var i = 0; i < allImages.length; i++) {
     var listItem = document.createElement('li');
-    listItem.textContent = allImages[i].name + ' was clicked ' + allImages[i].timesClicked + ' times and was shown ' + allImages[i].timesShown + ' times for a click rate of ' + Math.floor(allImages[i].timesClicked * 100 / allImages[i].timesShown) + '%.'
+    listItem.textContent = allImages[i].name + ' was clicked ' + clickData[i] + ' times and was shown ' + shownData[i] + ' times for a click rate of ' + calcPercent(clickData[i], shownData[i]) + '%.'
     list.appendChild(listItem)
-  }
-}
-
-// Functions for Clicking the Images
-function handleClick(e) {
-  if (votes < attempts) {
-    for (var i = 0; i < allImages.length; i++) {
-      if (e.target.name === allImages[i].name) {
-        allImages[i].timesClicked++;
-      }
-    }
-    renderImages();
-  }
-  votes++;
-  if (votes === attempts) {
-    displayResults();
-    toggleDisplay(hiddenTempDiv);
-    toggleDisplay(chartContainer);
-    renderChart(clickPercentagesData);
-    addToLocalData();
-    image1.removeEventListener('click', handleClick);
-    image2.removeEventListener('click', handleClick);
-    image3.removeEventListener('click', handleClick);
   }
 }
 
@@ -162,14 +153,14 @@ function fillChartPrereqArrays () {
     timesShownData.push(allImages[i].timesShown);
     timesClickedData.push(allImages[i].timesClicked)
     imageNames.push(allImages[i].name);
-    clickPercentagesData.push(Math.floor(allImages[i].timesClicked * 100 / allImages[i].timesShown));
+    clickPercentagesData.push(calcPercent(allImages[i].timesClicked, allImages[i].timesShown));
     dataColors.push(colors[i % (colors.length - 0)]);
     dataBorderColors.push(borderColors[i % (borderColors.length - 0)]);
   }
 }
 // Draws a New Chart
 function renderChart(dataArray) {
-  fillChartPrereqArrays();
+  // fillChartPrereqArrays();
   var canvas = document.getElementById('chart');
   canvas.innerHTML = 'null';
   var ctx = canvas.getContext('2d');
@@ -198,11 +189,74 @@ function renderChart(dataArray) {
   });
 }
 
+// *** Event Handlers *** //
+
+// Functions for Clicking the Images
+function handleClick(e) {
+  if (votes < attempts) {
+    for (var i = 0; i < allImages.length; i++) {
+      if (e.target.name === allImages[i].name) {
+        allImages[i].timesClicked++;
+      }
+    }
+    renderImages();
+  }
+  votes++;
+  if (votes === attempts) {
+    fillChartPrereqArrays();
+    toggleDisplay(hiddenTempDiv);
+    toggleDisplay(chartContainer);
+    chartOptions.style.display = 'flex';
+    displayResults(timesClickedData, timesShownData);
+    renderChart(clickPercentagesData);
+    addToLocalData();
+    image1.removeEventListener('click', handleClick);
+    image2.removeEventListener('click', handleClick);
+    image3.removeEventListener('click', handleClick);
+  }
+}
+
+function renderCurrentChart(percentData) {
+  renderChart(percentData);
+}
+
+function renderAggregateChart() {
+  grabLocalData();
+  var aggShown = [];
+  var aggClicked = [];
+  var aggPercents = [];
+
+  for (var i = 0; i < localInfo.length; i++) {
+    for (var j = 0; j < localInfo[i].length; j++) {
+      var shows = 0;
+      var clicks = 0;
+      var percents = 0;
+      for (var k = 0; k < localInfo[i][j]; k++) {
+        shows += localInfo[i][0][k];
+        clicks += localInfo[i][1][k];
+      }
+      aggShown.push(shows);
+      aggClicked.push(clicks);
+      aggPercents.push(calcPercent(clicks, shows));
+    }
+  }
+
+  console.log(aggShown);
+  console.log(aggClicked);
+  console.log(aggPercents);
+
+  displayResults(aggClicked, aggShown);
+  renderChart(aggPercents);
+}
+
+
+
 // *** JSON Utility *** //
 
 // Grab Local Storage Info (if there is any)
 function grabLocalData() {
   if(localStorage.length > 0) {
+    localInfo = [];
     for (var i = 0; i < localStorage.length; i++) {
       localInfo.push(JSON.parse(localStorage.getItem(Object.keys(localStorage)[i])))
     }
@@ -228,6 +282,11 @@ function controlPage() {
   image1.addEventListener('click', handleClick);
   image2.addEventListener('click', handleClick);
   image3.addEventListener('click', handleClick);
+
+  option1.addEventListener('click', renderCurrentChart);
+  option2.addEventListener('click', renderAggregateChart);
+  option3.addEventListener('click', handClick);
+  option4.addEventListener('click', handleck);
   
 }
 
@@ -238,3 +297,6 @@ function controlPage() {
 
 //Calling the main Function
 controlPage();
+
+toggleDisplay(chartContainer);
+renderChart();
