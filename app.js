@@ -110,7 +110,7 @@ function handleClick(e) {
     var chartDiv = document.getElementById('chartContainer');
     chartDiv.style.display = 'block';
     var resultsDiv = document.getElementById('temp');
-    resultsDiv.style.display = 'none'
+    resultsDiv.style.display = 'none';
   }
 }
 

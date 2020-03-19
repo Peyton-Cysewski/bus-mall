@@ -9,9 +9,15 @@ var allImages = [];
 var imageNames = [];
 
 // Individual Result Arrays
-var timesShown = [];
-var timesClicked = [];
-var clickPercentages = [];
+var timesShownData = [];
+var timesClickedData = [];
+var clickPercentagesData = [];
+
+// Unique Survey Results Array
+var surveyData = [timesShownData,timesClickedData,clickPercentagesData];
+
+// JSON Data
+var localInfo = [];
 
 // Survey Counters
 var attempts = 25;
@@ -54,9 +60,11 @@ new Image('usb','img/usb.gif')
 new Image('water-can','img/water-can.jpg')
 new Image('wine-glass','img/wine-glass.jpg')
 
-// Finding DOM Elements
+// Finding and setting specific DOM Elements
 var chartContainer = document.getElementById('chartContainer');
 var hiddenTempDiv = document.getElementById('temp');
+chartContainer.style.display = 'none';
+hiddenTempDiv.style.display = 'block';
 
 // Identifying DOM Image Locations
 var image1 = document.getElementById('image1')
@@ -70,14 +78,12 @@ var oldImage3 = image3;
 
 // *** Global Functions *** //
 
-// Toggles Displays between Block and None
-function toggleDisplay(target) {
-  console.log(target.style.display);
-  
-  if (target.style.display === 'none') {
-    target.style.display = 'block';
+// Toggles CSS Display Styles between Block and None
+function toggleDisplay(targetElement) {
+  if (targetElement.style.display === 'none') {
+    targetElement.style.display = 'block';
   } else {
-    target.style.display === 'none';
+    targetElement.style.display = 'none';
   }
 }
 
@@ -142,23 +148,21 @@ function handleClick(e) {
     displayResults();
     toggleDisplay(hiddenTempDiv);
     toggleDisplay(chartContainer);
-    renderChart(clickPercentages);
+    renderChart(clickPercentagesData);
+    addToLocalData();
     image1.removeEventListener('click', handleClick);
     image2.removeEventListener('click', handleClick);
     image3.removeEventListener('click', handleClick);
   }
 }
 
-// Event Listeners
-image1.addEventListener('click', handleClick);
-image2.addEventListener('click', handleClick);
-image3.addEventListener('click', handleClick);
-
-// Functions for Creating the Chart
+// Prepares the Chart Arrays
 function fillChartPrereqArrays () {
-    for (var i = 0; i < allImages.length; i++) {
+  for (var i = 0; i < allImages.length; i++) {
+    timesShownData.push(allImages[i].timesShown);
+    timesClickedData.push(allImages[i].timesClicked)
     imageNames.push(allImages[i].name);
-    clickPercentages.push(Math.floor(allImages[i].timesClicked * 100 / allImages[i].timesShown));
+    clickPercentagesData.push(Math.floor(allImages[i].timesClicked * 100 / allImages[i].timesShown));
     dataColors.push(colors[i % (colors.length - 0)]);
     dataBorderColors.push(borderColors[i % (borderColors.length - 0)]);
   }
@@ -194,9 +198,37 @@ function renderChart(dataArray) {
   });
 }
 
-//Handling the Page Display
+// *** JSON Utility *** //
+
+// Grab Local Storage Info (if there is any)
+function grabLocalData() {
+  if(localStorage.length > 0) {
+    for (var i = 0; i < localStorage.length; i++) {
+      localInfo.push(JSON.parse(localStorage.getItem(Object.keys(localStorage)[i])))
+    }
+  }
+}
+
+// Add Survey Results to Local Storage
+function addToLocalData() {
+  var keyName = "survey" + (Object.keys(localStorage).length + 1);
+  localStorage.setItem(keyName, JSON.stringify(surveyData));
+}
+
+
+
+// *** Master Functions *** //
+
+//Running the Page
 function controlPage() {
+  grabLocalData();
   renderImages();
+  
+  // Event Listeners
+  image1.addEventListener('click', handleClick);
+  image2.addEventListener('click', handleClick);
+  image3.addEventListener('click', handleClick);
+  
 }
 
 
